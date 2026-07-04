@@ -1,0 +1,99 @@
+# ---------------------------------------------------------------------------
+# macOS
+# ---------------------------------------------------------------------------
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+
+# ---------------------------------------------------------------------------
+# Xcode - user-specific & generated state
+# ---------------------------------------------------------------------------
+xcuserdata/
+*.xcuserstate
+*.xcuserdatad
+*.xccheckout
+*.moved-aside
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+
+# Keep shared schemes (these are intentionally committed)
+!xcshareddata/
+!xcshareddata/**
+
+# ---------------------------------------------------------------------------
+# Build artifacts / derived data
+# ---------------------------------------------------------------------------
+build/
+DerivedData/
+DerivedDataLocal/
+.derivedData/
+.derivedData-agent/
+.derivedDataLocal/
+*.o
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# ---------------------------------------------------------------------------
+# Archives & exports
+# ---------------------------------------------------------------------------
+*.xcarchive
+*.app
+*.appdsym
+*.appx
+
+# ---------------------------------------------------------------------------
+# Logs & local debug output
+# ---------------------------------------------------------------------------
+*.log
+
+# ---------------------------------------------------------------------------
+# Signing & provisioning (never commit these)
+# ---------------------------------------------------------------------------
+*.mobileprovision
+*.provisionprofile
+*.p12
+*.cer
+*.certSigningRequest
+*.pem
+*.key
+
+# ---------------------------------------------------------------------------
+# Secrets / environment
+# ---------------------------------------------------------------------------
+.env
+.env.*
+*.env
+Secrets.swift
+secrets.plist
+GoogleService-Info.plist
+
+# ---------------------------------------------------------------------------
+# Swift Package Manager
+# ---------------------------------------------------------------------------
+.swiftpm/
+.build/
+Package.resolved
+
+# ---------------------------------------------------------------------------
+# CocoaPods / Carthage (not currently used, kept for safety)
+# ---------------------------------------------------------------------------
+Pods/
+Carthage/Build/
+
+# ---------------------------------------------------------------------------
+# Project backups / scratch (kept out of the repo)
+# ---------------------------------------------------------------------------
+*.zip
+*.bak
+*.orig
+.tmp/
