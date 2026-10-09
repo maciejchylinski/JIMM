@@ -1,6 +1,6 @@
 //
 //  OnboardingView.swift
-//  jim
+//  JIMM
 //
 
 import SwiftUI

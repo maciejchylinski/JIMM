@@ -1,6 +1,6 @@
 //
 //  ContentView.swift
-//  jim
+//  JIMM
 //
 //  Created by Maciek on 26/03/2026.
 //

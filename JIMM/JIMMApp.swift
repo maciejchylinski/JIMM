@@ -1,6 +1,6 @@
 //
-//  jimApp.swift
-//  jim
+//  JIMMApp.swift
+//  JIMM
 //
 //  Created by Maciek on 26/03/2026.
 //
@@ -9,7 +9,7 @@ import SwiftData
 import SwiftUI
 
 @main
-struct jimApp: App {
+struct JIMMApp: App {
     @StateObject private var workoutSessionPresentationState = WorkoutSessionPresentationState()
     @StateObject private var restTimerLiveActivityManager = RestTimerLiveActivityManager()
     @AppStorage("settings.appearance") private var appearanceRawValue: String = "system"

@@ -1,6 +1,6 @@
 //
 //  LaunchLoadingView.swift
-//  jim
+//  JIMM
 //
 
 import SwiftUI
@@ -45,7 +45,7 @@ struct JIMMLogoMark: View {
     var height: CGFloat = 172
 
     var body: some View {
-        Image("GoJIMMLogo")
+        Image("JIMMLogo")
             .resizable()
             .interpolation(.none)
             .scaledToFit()

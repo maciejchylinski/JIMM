@@ -41,7 +41,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		549DA69E2F75789900274588 /* jim.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = jim.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		549DA69E2F75789900274588 /* JIMM.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = JIMM.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F1E1D1C12F75789B00274501 /* RestTimerLiveActivityExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = RestTimerLiveActivityExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		F1E1D1C32F75789B00274503 /* RestTimerActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestTimerActivityAttributes.swift; sourceTree = "<group>"; };
 		F1E1D1C62F75789B00274506 /* RestTimerLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestTimerLiveActivity.swift; sourceTree = "<group>"; };
@@ -52,9 +52,9 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		549DA6A02F75789900274588 /* jim */ = {
+		549DA6A02F75789900274588 /* JIMM */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = jim;
+			path = JIMM;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -91,7 +91,7 @@
 		549DA6952F75789900274588 = {
 			isa = PBXGroup;
 			children = (
-				549DA6A02F75789900274588 /* jim */,
+				549DA6A02F75789900274588 /* JIMM */,
 				F1E1D1D32F75789B00274513 /* SharedLiveActivity */,
 				F1E1D1D22F75789B00274512 /* RestTimerLiveActivityExtension */,
 				549DA69F2F75789900274588 /* Products */,
@@ -102,7 +102,7 @@
 		549DA69F2F75789900274588 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				549DA69E2F75789900274588 /* jim.app */,
+				549DA69E2F75789900274588 /* JIMM.app */,
 				F1E1D1C12F75789B00274501 /* RestTimerLiveActivityExtension.appex */,
 			);
 			name = Products;
@@ -129,9 +129,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		549DA69D2F75789900274588 /* jim */ = {
+		549DA69D2F75789900274588 /* JIMM */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 549DA6A92F75789B00274588 /* Build configuration list for PBXNativeTarget "jim" */;
+			buildConfigurationList = 549DA6A92F75789B00274588 /* Build configuration list for PBXNativeTarget "JIMM" */;
 			buildPhases = (
 				549DA69A2F75789900274588 /* Sources */,
 				549DA69B2F75789900274588 /* Frameworks */,
@@ -144,13 +144,13 @@
 				F1E1D1CE2F75789B0027450E /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				549DA6A02F75789900274588 /* jim */,
+				549DA6A02F75789900274588 /* JIMM */,
 			);
-			name = jim;
+			name = JIMM;
 			packageProductDependencies = (
 			);
-			productName = jim;
-			productReference = 549DA69E2F75789900274588 /* jim.app */;
+			productName = JIMM;
+			productReference = 549DA69E2F75789900274588 /* JIMM.app */;
 			productType = "com.apple.product-type.application";
 		};
 		F1E1D1C22F75789B00274502 /* RestTimerLiveActivityExtension */ = {
@@ -190,7 +190,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 549DA6992F75789900274588 /* Build configuration list for PBXProject "jim" */;
+			buildConfigurationList = 549DA6992F75789900274588 /* Build configuration list for PBXProject "JIMM" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -204,7 +204,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				549DA69D2F75789900274588 /* jim */,
+				549DA69D2F75789900274588 /* JIMM */,
 				F1E1D1C22F75789B00274502 /* RestTimerLiveActivityExtension */,
 			);
 		};
@@ -392,9 +392,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = AppInfo.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = JIMM;
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -426,9 +426,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = AppInfo.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = JIMM;
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -511,7 +511,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		549DA6992F75789900274588 /* Build configuration list for PBXProject "jim" */ = {
+		549DA6992F75789900274588 /* Build configuration list for PBXProject "JIMM" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				549DA6A72F75789B00274588 /* Debug */,
@@ -520,7 +520,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		549DA6A92F75789B00274588 /* Build configuration list for PBXNativeTarget "jim" */ = {
+		549DA6A92F75789B00274588 /* Build configuration list for PBXNativeTarget "JIMM" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				549DA6AA2F75789B00274588 /* Debug */,

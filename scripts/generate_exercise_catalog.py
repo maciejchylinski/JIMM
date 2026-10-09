@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate jim/jim/ExerciseCatalog.swift from structured exercise data."""
+"""Generate JIMM/ExerciseCatalog.swift from structured exercise data."""
 
 from __future__ import annotations
 
@@ -898,6 +898,6 @@ lines.append("""    static func seedIfNeeded(context: ModelContext) throws {
 }
 """)
 
-out = Path(__file__).resolve().parents[1] / "jim" / "ExerciseCatalog.swift"
+out = Path(__file__).resolve().parents[1] / "JIMM" / "ExerciseCatalog.swift"
 out.write_text("\n".join(lines) + "\n", encoding="utf-8")
 print(f"Wrote {out}")

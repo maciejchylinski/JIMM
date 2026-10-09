@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "549DA69D2F75789900274588"
-               BuildableName = "jim.app"
-               BlueprintName = "jim"
-               ReferencedContainer = "container:jim.xcodeproj">
+               BuildableName = "JIMM.app"
+               BlueprintName = "JIMM"
+               ReferencedContainer = "container:JIMM.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -44,9 +44,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "549DA69D2F75789900274588"
-            BuildableName = "jim.app"
-            BlueprintName = "jim"
-            ReferencedContainer = "container:jim.xcodeproj">
+            BuildableName = "JIMM.app"
+            BlueprintName = "JIMM"
+            ReferencedContainer = "container:JIMM.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -61,9 +61,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "549DA69D2F75789900274588"
-            BuildableName = "jim.app"
-            BlueprintName = "jim"
-            ReferencedContainer = "container:jim.xcodeproj">
+            BuildableName = "JIMM.app"
+            BlueprintName = "JIMM"
+            ReferencedContainer = "container:JIMM.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

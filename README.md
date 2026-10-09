@@ -79,29 +79,29 @@ The current version remains offline-first and does not require an account.
 ### Run
 
 1. Clone the repository.
-2. Open `jim.xcodeproj` in Xcode.
-3. Select the `jim` scheme and an iOS 18+ simulator (or your device).
+2. Open `JIMM.xcodeproj` in Xcode.
+3. Select the `JIMM` scheme and an iOS 18+ simulator (or your device).
 4. Build & run (`Cmd + R`).
 
-> If running on a physical device, set your own signing team in **Signing & Capabilities** for the `jim` and `RestTimerLiveActivityExtension` targets.
+> If running on a physical device, set your own signing team in **Signing & Capabilities** for the `JIMM` and `RestTimerLiveActivityExtension` targets.
 
 ## Privacy
 
-JIMM collects no personal data and contains no analytics or third-party SDKs. All workout data is stored locally on the device using SwiftData and is never transmitted off-device. See `jim/PrivacyInfo.xcprivacy` for the app's privacy manifest.
+JIMM collects no personal data and contains no analytics or third-party SDKs. All workout data is stored locally on the device using SwiftData and is never transmitted off-device. See `JIMM/PrivacyInfo.xcprivacy` for the app's privacy manifest.
 
 ## Project structure
 
 ```
-jim/
-├── jim/                              # App sources (SwiftUI views, SwiftData models, logic)
-│   ├── jimApp.swift                  # App entry point & ModelContainer setup
+JIMM/
+├── JIMM/                             # App sources (SwiftUI views, SwiftData models, logic)
+│   ├── JIMMApp.swift                 # App entry point & ModelContainer setup
 │   ├── Models.swift                  # SwiftData models (Exercise, WorkoutSession, ...)
 │   ├── ExerciseCatalog.swift         # Built-in exercise seeding
 │   ├── *View.swift                   # SwiftUI screens
 │   └── PrivacyInfo.xcprivacy         # Privacy manifest
 ├── RestTimerLiveActivityExtension/   # Live Activity widget extension
 ├── SharedLiveActivity/               # Shared ActivityKit attributes
-└── jim.xcodeproj                     # Xcode project
+└── JIMM.xcodeproj                    # Xcode project
 ```
 
 ## License

@@ -1,12 +1,12 @@
 #!/bin/sh
-# Repeatable builds for jim (scheme: jim → jim.app + embedded RestTimerLiveActivityExtension.appex).
+# Repeatable builds for JIMM (scheme: JIMM → JIMM.app + embedded RestTimerLiveActivityExtension.appex).
 # Run from repo root: ./scripts/build.sh [sim|ios|clean]
 
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-PROJECT="jim.xcodeproj"
-SCHEME="jim"
+PROJECT="JIMM.xcodeproj"
+SCHEME="JIMM"
 DERIVED="DerivedDataLocal"
 
 run_build() {
@@ -22,8 +22,9 @@ run_build() {
 
 case "${1:-sim}" in
   clean)
-    echo "==> Removing local and global DerivedData for jim"
+    echo "==> Removing local and global DerivedData for JIMM"
     rm -rf "${DERIVED}"
+    rm -rf "${HOME}/Library/Developer/Xcode/DerivedData/JIMM-"*
     rm -rf "${HOME}/Library/Developer/Xcode/DerivedData/jim-"*
     ;;
   ios)
