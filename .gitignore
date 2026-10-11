@@ -76,6 +76,10 @@ DerivedDataLocal/
 Secrets.swift
 secrets.plist
 GoogleService-Info.plist
+JIMM/Account/LocalSupabaseSecrets.swift
+**/LocalSupabaseSecrets.swift
+SupabaseSecrets.plist
+Config/Supabase.xcconfig
 
 # ---------------------------------------------------------------------------
 # Swift Package Manager

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A1B2C3D42F9A000100000001 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D42F9A000100000002 /* Supabase */; };
 		F1E1D1C42F75789B00274504 /* RestTimerActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1E1D1C32F75789B00274503 /* RestTimerActivityAttributes.swift */; };
 		F1E1D1C52F75789B00274505 /* RestTimerActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1E1D1C32F75789B00274503 /* RestTimerActivityAttributes.swift */; };
 		F1E1D1C72F75789B00274507 /* RestTimerLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1E1D1C62F75789B00274506 /* RestTimerLiveActivity.swift */; };
@@ -64,6 +65,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A1B2C3D42F9A000100000001 /* Supabase in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -148,6 +150,7 @@
 			);
 			name = JIMM;
 			packageProductDependencies = (
+				A1B2C3D42F9A000100000002 /* Supabase */,
 			);
 			productName = JIMM;
 			productReference = 549DA69E2F75789900274588 /* JIMM.app */;
@@ -199,6 +202,9 @@
 			);
 			mainGroup = 549DA6952F75789900274588;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				A1B2C3D42F9A000100000003 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 549DA69F2F75789900274588 /* Products */;
 			projectDirPath = "";
@@ -385,6 +391,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = JIMM/JIMM.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = BU2MKN6WK4;
@@ -419,6 +426,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = JIMM/JIMM.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = BU2MKN6WK4;
@@ -539,6 +547,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A1B2C3D42F9A000100000003 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.31.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A1B2C3D42F9A000100000002 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D42F9A000100000003 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 549DA6962F75789900274588 /* Project object */;
 }

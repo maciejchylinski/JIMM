@@ -268,7 +268,12 @@ struct WorkoutPlanEditorView: View {
 
     private func savePlan() {
         normalizeExerciseOrder()
+        plan.touchForSync()
+        for item in plan.exercises {
+            item.touchForSync()
+        }
         try? modelContext.save()
+        NotificationCenter.default.post(name: .jimLocalDataDidChange, object: nil)
     }
 
     private func startWorkoutFromPlan() {

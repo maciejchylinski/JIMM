@@ -12,6 +12,8 @@ import SwiftUI
 struct JIMMApp: App {
     @StateObject private var workoutSessionPresentationState = WorkoutSessionPresentationState()
     @StateObject private var restTimerLiveActivityManager = RestTimerLiveActivityManager()
+    @ObservedObject private var authService = AuthService.shared
+    @ObservedObject private var syncService = SyncService.shared
     @AppStorage("settings.appearance") private var appearanceRawValue: String = "system"
     @AppStorage("onboarding.hasCompleted") private var hasCompletedOnboarding = false
     @Environment(\.scenePhase) private var scenePhase
@@ -49,14 +51,38 @@ struct JIMMApp: App {
                 }
             }
             .animation(.easeOut(duration: 0.35), value: isLaunchLoadingVisible)
+            .environmentObject(authService)
+            .environmentObject(syncService)
             .task {
+                SyncService.shared.attach(modelContext: container.mainContext)
+                AuthService.shared.bootstrap()
                 await dismissLaunchLoadingIfNeeded()
                 reconcileRestTimerLiveActivity()
+                SyncService.shared.scheduleSync()
             }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active {
                     reconcileRestTimerLiveActivity()
+                    SyncService.shared.scheduleSync()
                 }
+            }
+            .onOpenURL { url in
+                if url.scheme == "mch.jim", url.host == "auth-callback" {
+                    Task { await AuthService.shared.handleAuthRedirect(url: url) }
+                    return
+                }
+                guard url.scheme == "mch.jim", url.host == "active-workout" else { return }
+                Task { @MainActor in
+                    if let session = try? ActiveWorkoutSession.canonicalUnfinishedSessionAfterCleanup(in: container.mainContext) {
+                        NotificationCenter.default.post(name: .jimOpenActiveWorkoutSession, object: session)
+                    }
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .jimWorkoutSessionFinishedForHistory)) { _ in
+                SyncService.shared.scheduleSync()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .jimLocalDataDidChange)) { _ in
+                SyncService.shared.scheduleSync()
             }
         }
         .modelContainer(container)
@@ -86,14 +112,6 @@ struct JIMMApp: App {
             .onChange(of: workoutSessionPresentationState.activeRestStartDate) { _, newValue in
                 if newValue == nil {
                     restTimerLiveActivityManager.sync(payload: nil)
-                }
-            }
-            .onOpenURL { url in
-                guard url.scheme == "mch.jim", url.host == "active-workout" else { return }
-                Task { @MainActor in
-                    if let session = try? ActiveWorkoutSession.canonicalUnfinishedSessionAfterCleanup(in: container.mainContext) {
-                        NotificationCenter.default.post(name: .jimOpenActiveWorkoutSession, object: session)
-                    }
                 }
             }
     }

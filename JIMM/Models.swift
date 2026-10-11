@@ -113,6 +113,11 @@ final class Exercise {
     var isHiddenFromLibrary: Bool?
     /// Optional persisted logging mode; missing/invalid reads as `.strength` (legacy default).
     var loggingTypeRawValue: String?
+    /// Stable ID for cloud sync (user-saved exercises only).
+    var syncID: UUID = UUID()
+    var updatedAt: Date = Date()
+    var lastSyncedAt: Date?
+    var cloudDeletedAt: Date?
 
     var source: ExerciseSource {
         get { ExerciseSource(rawValue: sourceRawValue) ?? .userSaved }
@@ -140,7 +145,9 @@ final class Exercise {
         searchMetadata: String = "",
         source: ExerciseSource = .userSaved,
         isHiddenFromLibrary: Bool? = nil,
-        loggingType: ExerciseLoggingType? = nil
+        loggingType: ExerciseLoggingType? = nil,
+        syncID: UUID = UUID(),
+        updatedAt: Date = Date()
     ) {
         self.name = name
         self.category = category
@@ -148,6 +155,12 @@ final class Exercise {
         self.sourceRawValue = source.rawValue
         self.isHiddenFromLibrary = isHiddenFromLibrary
         self.loggingTypeRawValue = loggingType.flatMap { $0 == .strength ? nil : $0.rawValue }
+        self.syncID = syncID
+        self.updatedAt = updatedAt
+    }
+
+    func touchForSync() {
+        updatedAt = Date()
     }
 }
 
@@ -159,6 +172,10 @@ final class WorkoutSession {
     var startedFromPlanTemplate: Bool?
     /// When non-nil, the workout was finished by the user and can be used for history / previous-reference lookup.
     var completedAt: Date?
+    var syncID: UUID = UUID()
+    var updatedAt: Date = Date()
+    var lastSyncedAt: Date?
+    var cloudDeletedAt: Date?
     @Relationship(deleteRule: .cascade, inverse: \WorkoutSessionExercise.session)
     var sessionExercises: [WorkoutSessionExercise]
 
@@ -167,13 +184,21 @@ final class WorkoutSession {
         sessionDate: Date,
         startedFromPlanTemplate: Bool? = nil,
         completedAt: Date? = nil,
-        sessionExercises: [WorkoutSessionExercise] = []
+        sessionExercises: [WorkoutSessionExercise] = [],
+        syncID: UUID = UUID(),
+        updatedAt: Date = Date()
     ) {
         self.name = name
         self.sessionDate = sessionDate
         self.startedFromPlanTemplate = startedFromPlanTemplate
         self.completedAt = completedAt
         self.sessionExercises = sessionExercises
+        self.syncID = syncID
+        self.updatedAt = updatedAt
+    }
+
+    func touchForSync() {
+        updatedAt = Date()
     }
 }
 
@@ -186,6 +211,10 @@ final class WorkoutSessionExercise {
     var sourceRawValue: String = ExerciseSource.builtIn.rawValue
     /// Used only for session-only exercises that should not be persisted in global library.
     var customExerciseName: String?
+    var syncID: UUID = UUID()
+    var updatedAt: Date = Date()
+    var lastSyncedAt: Date?
+    var cloudDeletedAt: Date?
     @Relationship(deleteRule: .cascade, inverse: \WorkoutSet.sessionExercise)
     var sets: [WorkoutSet]
 
@@ -207,7 +236,9 @@ final class WorkoutSessionExercise {
         exercise: Exercise? = nil,
         sourceRawValue: String = ExerciseSource.builtIn.rawValue,
         customExerciseName: String? = nil,
-        sets: [WorkoutSet] = []
+        sets: [WorkoutSet] = [],
+        syncID: UUID = UUID(),
+        updatedAt: Date = Date()
     ) {
         self.exerciseOrder = exerciseOrder
         self.session = session
@@ -215,6 +246,12 @@ final class WorkoutSessionExercise {
         self.sourceRawValue = sourceRawValue
         self.customExerciseName = customExerciseName
         self.sets = sets
+        self.syncID = syncID
+        self.updatedAt = updatedAt
+    }
+
+    func touchForSync() {
+        updatedAt = Date()
     }
 }
 
@@ -230,6 +267,10 @@ final class WorkoutSet {
     var durationSeconds: Int?
     /// Logged distance for cardio exercises (e.g. treadmill, bike). Stored in meters.
     var distanceMeters: Double?
+    var syncID: UUID = UUID()
+    var updatedAt: Date = Date()
+    var lastSyncedAt: Date?
+    var cloudDeletedAt: Date?
     var sessionExercise: WorkoutSessionExercise?
 
     init(
@@ -240,7 +281,9 @@ final class WorkoutSet {
         restDurationSeconds: Int? = nil,
         durationSeconds: Int? = nil,
         distanceMeters: Double? = nil,
-        sessionExercise: WorkoutSessionExercise? = nil
+        sessionExercise: WorkoutSessionExercise? = nil,
+        syncID: UUID = UUID(),
+        updatedAt: Date = Date()
     ) {
         self.setOrder = setOrder
         self.weight = weight
@@ -250,6 +293,12 @@ final class WorkoutSet {
         self.durationSeconds = durationSeconds
         self.distanceMeters = distanceMeters
         self.sessionExercise = sessionExercise
+        self.syncID = syncID
+        self.updatedAt = updatedAt
+    }
+
+    func touchForSync() {
+        updatedAt = Date()
     }
 }
 
@@ -259,17 +308,29 @@ final class WorkoutSet {
 final class WorkoutPlan {
     var name: String
     var createdAt: Date
+    var syncID: UUID = UUID()
+    var updatedAt: Date = Date()
+    var lastSyncedAt: Date?
+    var cloudDeletedAt: Date?
     @Relationship(deleteRule: .cascade, inverse: \WorkoutPlanExercise.plan)
     var exercises: [WorkoutPlanExercise]
 
     init(
         name: String,
         createdAt: Date = Date(),
-        exercises: [WorkoutPlanExercise] = []
+        exercises: [WorkoutPlanExercise] = [],
+        syncID: UUID = UUID(),
+        updatedAt: Date = Date()
     ) {
         self.name = name
         self.createdAt = createdAt
         self.exercises = exercises
+        self.syncID = syncID
+        self.updatedAt = updatedAt
+    }
+
+    func touchForSync() {
+        updatedAt = Date()
     }
 }
 
@@ -280,6 +341,10 @@ final class WorkoutPlanExercise {
     var customExerciseName: String?
     var sourceRawValue: String
     var plan: WorkoutPlan?
+    var syncID: UUID = UUID()
+    var updatedAt: Date = Date()
+    var lastSyncedAt: Date?
+    var cloudDeletedAt: Date?
 
     var source: ExerciseSource {
         get { ExerciseSource(rawValue: sourceRawValue) ?? .builtIn }
@@ -291,12 +356,20 @@ final class WorkoutPlanExercise {
         exercise: Exercise? = nil,
         customExerciseName: String? = nil,
         sourceRawValue: String = ExerciseSource.builtIn.rawValue,
-        plan: WorkoutPlan? = nil
+        plan: WorkoutPlan? = nil,
+        syncID: UUID = UUID(),
+        updatedAt: Date = Date()
     ) {
         self.exerciseOrder = exerciseOrder
         self.exercise = exercise
         self.customExerciseName = customExerciseName
         self.sourceRawValue = sourceRawValue
         self.plan = plan
+        self.syncID = syncID
+        self.updatedAt = updatedAt
+    }
+
+    func touchForSync() {
+        updatedAt = Date()
     }
 }

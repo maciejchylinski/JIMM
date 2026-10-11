@@ -1003,9 +1003,17 @@ struct WorkoutSessionView: View {
             return
         }
         session.completedAt = Date()
+        session.touchForSync()
+        for sessionExercise in session.sessionExercises {
+            sessionExercise.touchForSync()
+            for workoutSet in sessionExercise.sets {
+                workoutSet.touchForSync()
+            }
+        }
         clearRestTimerAndLiveActivity()
         modelContext.processPendingChanges()
         try? modelContext.save()
+        NotificationCenter.default.post(name: .jimLocalDataDidChange, object: nil)
         showWorkoutFinishSummary = true
     }
 
