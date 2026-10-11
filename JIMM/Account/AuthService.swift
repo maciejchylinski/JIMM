@@ -13,7 +13,7 @@ enum AuthServiceError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .notConfigured:
-            return "Cloud account is not configured. Add your Supabase URL and anon key to LocalSupabaseSecrets.swift."
+            return "Cloud account is not available right now."
         case .notSignedIn:
             return "You are not signed in."
         case .invalidAppleCredential:
@@ -170,8 +170,8 @@ final class AuthService: ObservableObject {
         shouldOfferInitialBackup = false
     }
 
-    /// Deletes cloud data + auth user via Edge Function, then signs out locally.
-    /// Local workouts are kept unless `alsoDeleteLocalData` is handled by the caller.
+    /// Deletes online backup + auth user via Edge Function, then signs out locally.
+    /// Local workouts on device are kept.
     func deleteAccount() async throws {
         let client = try requireClient()
         guard session != nil else { throw AuthServiceError.notSignedIn }
@@ -179,10 +179,9 @@ final class AuthService: ObservableObject {
         do {
             try await client.functions.invoke("delete-account")
         } catch {
-            // Fallback: wipe user-owned rows via RLS, then ask Edge Function again is preferred.
             // If the function is not deployed, surface a clear error.
             throw AuthServiceError.message(
-                "Could not delete account. Deploy the delete-account Edge Function, then try again. (\(error.localizedDescription))"
+                "Could not delete account. Please try again. (\(error.localizedDescription))"
             )
         }
 

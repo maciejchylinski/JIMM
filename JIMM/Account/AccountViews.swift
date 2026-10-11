@@ -1,4 +1,6 @@
+#if JIMM_ENABLE_APPLE_SIGN_IN
 import AuthenticationServices
+#endif
 import SwiftData
 import SwiftUI
 
@@ -12,7 +14,7 @@ struct AccountSettingsSection: View {
     var body: some View {
         Section("Account") {
             if !SupabaseConfig.isConfigured {
-                Text("Cloud backup is not configured yet. Add your Supabase URL and anon key to LocalSupabaseSecrets.swift.")
+                Text("Cloud backup is not available yet.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             } else if auth.isSignedIn {
@@ -61,7 +63,6 @@ struct AccountHubView: View {
     @State private var alertMessage: String?
     @State private var showSignOutConfirm = false
     @State private var showDeleteConfirm = false
-    @State private var alsoDeleteLocalData = false
     @Environment(\.modelContext) private var modelContext
 
     var body: some View {
@@ -111,17 +112,12 @@ struct AccountHubView: View {
             isPresented: $showDeleteConfirm,
             titleVisibility: .visible
         ) {
-            Button("Delete Account & Cloud Data", role: .destructive) {
-                alsoDeleteLocalData = false
-                Task { await deleteAccount() }
-            }
-            Button("Delete Account, Cloud & Local Data", role: .destructive) {
-                alsoDeleteLocalData = true
+            Button("Delete Account", role: .destructive) {
                 Task { await deleteAccount() }
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("This permanently deletes your Supabase account and cloud workout backup. Choose whether to also remove workouts stored on this device.")
+            Text("This will permanently delete your account and online backup. Workouts saved on this iPhone will stay here.")
         }
         .alert("Back up local workouts?", isPresented: $auth.shouldOfferInitialBackup) {
             Button("Back Up Now") {
@@ -137,6 +133,7 @@ struct AccountHubView: View {
 
     @ViewBuilder
     private var signedOutContent: some View {
+        #if JIMM_ENABLE_APPLE_SIGN_IN
         Section {
             SignInWithAppleButton(.signIn) { request in
                 request.requestedScopes = [.email, .fullName]
@@ -150,6 +147,7 @@ struct AccountHubView: View {
         } footer: {
             Text("Continue with Apple uses your Apple ID. Email is optional depending on your Apple privacy choices.")
         }
+        #endif
 
         Section("Email") {
             NavigationLink("Create Account") {
@@ -206,6 +204,7 @@ struct AccountHubView: View {
         }
     }
 
+    #if JIMM_ENABLE_APPLE_SIGN_IN
     private func handleApple(_ result: Result<ASAuthorization, Error>) async {
         switch result {
         case .failure(let error):
@@ -229,6 +228,7 @@ struct AccountHubView: View {
             }
         }
     }
+    #endif
 
     private func runSync(manual: Bool) async {
         isWorking = true
@@ -256,25 +256,10 @@ struct AccountHubView: View {
         defer { isWorking = false }
         do {
             try await auth.deleteAccount()
-            if alsoDeleteLocalData {
-                try deleteAllLocalUserData()
-            }
             dismiss()
         } catch {
             alertMessage = error.localizedDescription
         }
-    }
-
-    private func deleteAllLocalUserData() throws {
-        let sessions = try modelContext.fetch(FetchDescriptor<WorkoutSession>())
-        sessions.forEach(modelContext.delete)
-        let plans = try modelContext.fetch(FetchDescriptor<WorkoutPlan>())
-        plans.forEach(modelContext.delete)
-        let customs = try modelContext.fetch(FetchDescriptor<Exercise>())
-            .filter { $0.source == .userSaved }
-        customs.forEach(modelContext.delete)
-        try modelContext.save()
-        NotificationCenter.default.post(name: .jimWorkoutSessionFinishedForHistory, object: nil)
     }
 }
 
@@ -320,7 +305,7 @@ struct EmailAuthFormView: View {
             } footer: {
                 switch mode {
                 case .signUp:
-                    Text("Use at least 6 characters. Depending on Supabase settings, you may need to confirm your email before signing in.")
+                    Text("Use at least 6 characters. You may need to confirm your email before signing in.")
                 case .signIn:
                     Text("Sign in with the email and password for your JIMM account.")
                 case .reset:
