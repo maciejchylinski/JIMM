@@ -50,7 +50,7 @@ struct JIMMApp: App {
                         .transition(.opacity)
                 }
             }
-            .animation(.easeOut(duration: 0.35), value: isLaunchLoadingVisible)
+            .animation(.easeOut(duration: 0.25), value: isLaunchLoadingVisible)
             .environmentObject(authService)
             .environmentObject(syncService)
             .task {
@@ -100,7 +100,7 @@ struct JIMMApp: App {
 
     @MainActor
     private func dismissLaunchLoadingIfNeeded() async {
-        try? await Task.sleep(for: .milliseconds(600))
+        try? await Task.sleep(for: .milliseconds(300))
         isLaunchLoadingVisible = false
     }
 

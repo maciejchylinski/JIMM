@@ -59,17 +59,20 @@ struct JIMMLogoMark: View {
 struct JIMMWordmark: View {
     var fontSize: CGFloat = 38
 
-    var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 0) {
-            Text("JIMM")
-                .font(.system(size: fontSize, weight: .heavy))
-                .foregroundStyle(.white)
+    private var accentDotSize: CGFloat { fontSize * 0.17 }
 
-            Circle()
-                .fill(UITheme.accent)
-                .frame(width: fontSize * 0.17, height: fontSize * 0.17)
-                .offset(x: 4, y: -fontSize * 0.20)
-        }
+    var body: some View {
+        // Overlay keeps the accent dot out of layout width so the tagline
+        // centers on the JIMM letters, not the optical shift from the mark.
+        Text("JIMM")
+            .font(.system(size: fontSize, weight: .heavy))
+            .foregroundStyle(.white)
+            .overlay(alignment: .topTrailing) {
+                Circle()
+                    .fill(UITheme.accent)
+                    .frame(width: accentDotSize, height: accentDotSize)
+                    .offset(x: 4 + accentDotSize * 0.35, y: -fontSize * 0.20)
+            }
     }
 }
 
