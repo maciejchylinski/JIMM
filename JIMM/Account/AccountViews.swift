@@ -138,7 +138,7 @@ struct AccountHubView: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Your workouts stay on this iPhone.")
+            Text("You can sign in again at any time.")
         }
         .sheet(isPresented: $showForgotPassword) {
             NavigationStack {
