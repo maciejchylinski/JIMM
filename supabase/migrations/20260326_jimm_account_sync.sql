@@ -9,6 +9,8 @@
 create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   email text,
+  first_name text,
+  last_name text,
   display_name text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -149,11 +151,21 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  meta_first text := nullif(trim(coalesce(new.raw_user_meta_data ->> 'first_name', '')), '');
+  meta_last text := nullif(trim(coalesce(new.raw_user_meta_data ->> 'last_name', '')), '');
+  meta_display text := nullif(
+    trim(both from concat_ws(' ', meta_first, meta_last)),
+    ''
+  );
 begin
-  insert into public.profiles (id, email, created_at, updated_at)
-  values (new.id, new.email, now(), now())
+  insert into public.profiles (id, email, first_name, last_name, display_name, created_at, updated_at)
+  values (new.id, new.email, meta_first, meta_last, meta_display, now(), now())
   on conflict (id) do update
     set email = excluded.email,
+        first_name = coalesce(excluded.first_name, public.profiles.first_name),
+        last_name = coalesce(excluded.last_name, public.profiles.last_name),
+        display_name = coalesce(excluded.display_name, public.profiles.display_name),
         updated_at = now();
   return new;
 end;

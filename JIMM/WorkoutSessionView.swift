@@ -1656,87 +1656,98 @@ private struct SessionAddExercisePickerView: View {
                 .padding(.horizontal, 16)
             }
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 14) {
-                    if !filteredUserSavedExercises.isEmpty {
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                                Text("My Exercises")
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 14) {
+                        Color.clear
+                            .frame(height: 1)
+                            .id("exerciseListTop")
+
+                        if !filteredUserSavedExercises.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                                    Text("My Exercises")
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(WorkoutLogTheme.textSecondary)
+                                        .textCase(.uppercase)
+                                        .tracking(0.45)
+                                    Spacer(minLength: 0)
+                                    if !isMyExercisesSelectionMode {
+                                        Menu {
+                                            Button("Delete Exercises") {
+                                                enterMyExercisesSelectionMode()
+                                            }
+                                        } label: {
+                                            Image(systemName: "ellipsis.circle")
+                                                .font(.system(size: UITheme.iconSizeM, weight: .semibold))
+                                                .foregroundStyle(WorkoutLogTheme.textSecondary)
+                                                .frame(width: Self.exercisePickerPlusButtonSide, height: Self.exercisePickerPlusButtonSide)
+                                                .contentShape(Rectangle())
+                                        }
+                                        .buttonStyle(.plain)
+                                        .accessibilityLabel("My Exercises options")
+                                    }
+                                }
+
+                                exerciseList(
+                                    exercises: visibleUserSavedExercises,
+                                    isMyExercisesSection: true
+                                )
+
+                                if canExpandMyExercises {
+                                    Button(isMyExercisesExpanded ? "See Less" : "See More") {
+                                        withAnimation(.easeInOut(duration: 0.18)) {
+                                            isMyExercisesExpanded.toggle()
+                                        }
+                                    }
+                                    .font(.subheadline.weight(.semibold))
+                                    .buttonStyle(.plain)
+                                    .foregroundStyle(WorkoutLogTheme.accent)
+                                }
+                            }
+                        }
+
+                        if !filteredRecentExercises.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Recent")
                                     .font(.caption.weight(.semibold))
                                     .foregroundStyle(WorkoutLogTheme.textSecondary)
                                     .textCase(.uppercase)
                                     .tracking(0.45)
-                                Spacer(minLength: 0)
-                                if !isMyExercisesSelectionMode {
-                                    Menu {
-                                        Button("Delete Exercises") {
-                                            enterMyExercisesSelectionMode()
-                                        }
-                                    } label: {
-                                        Image(systemName: "ellipsis.circle")
-                                            .font(.system(size: UITheme.iconSizeM, weight: .semibold))
-                                            .foregroundStyle(WorkoutLogTheme.textSecondary)
-                                            .frame(width: Self.exercisePickerPlusButtonSide, height: Self.exercisePickerPlusButtonSide)
-                                            .contentShape(Rectangle())
-                                    }
-                                    .buttonStyle(.plain)
-                                    .accessibilityLabel("My Exercises options")
-                                }
-                            }
-
-                            exerciseList(
-                                exercises: visibleUserSavedExercises,
-                                isMyExercisesSection: true
-                            )
-
-                            if canExpandMyExercises {
-                                Button(isMyExercisesExpanded ? "See Less" : "See More") {
-                                    withAnimation(.easeInOut(duration: 0.18)) {
-                                        isMyExercisesExpanded.toggle()
-                                    }
-                                }
-                                .font(.subheadline.weight(.semibold))
-                                .buttonStyle(.plain)
-                                .foregroundStyle(WorkoutLogTheme.accent)
+                                exerciseList(exercises: filteredRecentExercises)
                             }
                         }
-                    }
 
-                    if !filteredRecentExercises.isEmpty {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Recent")
-                                .font(.caption.weight(.semibold))
+                        if !filteredAllExercises.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("All Exercises")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(WorkoutLogTheme.textSecondary)
+                                    .textCase(.uppercase)
+                                    .tracking(0.45)
+                                exerciseList(exercises: filteredAllExercises)
+                            }
+                        }
+
+                        if filteredRecentExercises.isEmpty && filteredAllExercises.isEmpty {
+                            Text("No matching exercises.")
+                                .font(.subheadline)
                                 .foregroundStyle(WorkoutLogTheme.textSecondary)
-                                .textCase(.uppercase)
-                                .tracking(0.45)
-                            exerciseList(exercises: filteredRecentExercises)
                         }
                     }
-
-                    if !filteredAllExercises.isEmpty {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("All Exercises")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(WorkoutLogTheme.textSecondary)
-                                .textCase(.uppercase)
-                                .tracking(0.45)
-                            exerciseList(exercises: filteredAllExercises)
-                        }
-                    }
-
-                    if filteredRecentExercises.isEmpty && filteredAllExercises.isEmpty {
-                        Text("No matching exercises.")
-                            .font(.subheadline)
-                            .foregroundStyle(WorkoutLogTheme.textSecondary)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 16)
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    isNameFieldFocused = false
+                    dismissKeyboard()
+                }
+                .onChange(of: selectedCategory) { _, _ in
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        proxy.scrollTo("exerciseListTop", anchor: .top)
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 16)
-            }
-            .contentShape(Rectangle())
-            .onTapGesture {
-                isNameFieldFocused = false
-                dismissKeyboard()
             }
         }
         .padding(.top, 10)

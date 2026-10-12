@@ -5,6 +5,8 @@ import Foundation
 struct ProfileDTO: Codable, Sendable {
     let id: UUID
     var email: String?
+    var firstName: String?
+    var lastName: String?
     var displayName: String?
     var createdAt: Date?
     var updatedAt: Date?
@@ -12,6 +14,8 @@ struct ProfileDTO: Codable, Sendable {
     enum CodingKeys: String, CodingKey {
         case id
         case email
+        case firstName = "first_name"
+        case lastName = "last_name"
         case displayName = "display_name"
         case createdAt = "created_at"
         case updatedAt = "updated_at"

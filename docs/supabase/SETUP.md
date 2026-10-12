@@ -24,7 +24,11 @@ In the Supabase SQL Editor, run the full script:
 
 `supabase/migrations/20260326_jimm_account_sync.sql`
 
-This creates tables, profile trigger, grants, and RLS so each user can only access their own rows.
+Then, if the project already existed before profile names were added, also run:
+
+`supabase/migrations/20261012_profiles_first_last_name.sql`
+
+This creates tables, profile trigger, grants, and RLS so each user can only access their own rows. Profile stores optional `first_name` / `last_name` for Account UI.
 
 ## 4. Auth providers (Dashboard → Authentication)
 

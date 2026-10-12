@@ -7,10 +7,10 @@ import SwiftUI
 
 struct AccountSettingsSection: View {
     @ObservedObject var auth: AuthService
-    @State private var showAccountSheet = false
+    @Binding var showAccountSheet: Bool
 
     var body: some View {
-        Section("Account") {
+        Section {
             if !SupabaseConfig.isConfigured {
                 Text("Account is not available yet.")
                     .font(.footnote)
@@ -20,26 +20,45 @@ struct AccountSettingsSection: View {
                     showAccountSheet = true
                 } label: {
                     HStack {
-                        Text(auth.accountIdentifier)
-                            .foregroundStyle(.primary)
+                        VStack(alignment: .leading, spacing: 4) {
+                            if let firstName = auth.profileFirstName, !firstName.isEmpty {
+                                Text(firstName)
+                                    .foregroundStyle(.primary)
+                            }
+                            Text(auth.accountIdentifier)
+                                .foregroundStyle(auth.profileFirstName == nil ? .primary : .secondary)
+                                .font(auth.profileFirstName == nil ? .body : .footnote)
+                        }
                         Spacer()
                         Image(systemName: "chevron.right")
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(.tertiary)
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.borderless)
             } else {
-                Button("Account") {
+                Button {
                     showAccountSheet = true
+                } label: {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Account")
+                                .foregroundStyle(.primary)
+                            Text("Sign in or sign up.")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
                 }
-                Text("Sign in to use your account.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .sheet(isPresented: $showAccountSheet) {
-            NavigationStack {
-                AccountHubView()
+                .buttonStyle(.borderless)
             }
         }
     }
@@ -48,13 +67,36 @@ struct AccountSettingsSection: View {
 // MARK: - Hub
 
 struct AccountHubView: View {
+    private enum AuthMode: String, CaseIterable, Identifiable {
+        case signIn
+        case signUp
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .signIn: return "Sign In"
+            case .signUp: return "Sign Up"
+            }
+        }
+    }
+
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var auth = AuthService.shared
 
+    @State private var mode: AuthMode = .signIn
+    @State private var firstName = ""
+    @State private var lastName = ""
+    @State private var email = ""
+    @State private var password = ""
     @State private var isWorking = false
+    @State private var formMessage: String?
+    @State private var isFormError = false
     @State private var alertMessage: String?
     @State private var showSignOutConfirm = false
     @State private var showDeleteConfirm = false
+    @State private var showForgotPassword = false
+    @State private var deleteConfirmationText = ""
 
     var body: some View {
         List {
@@ -98,28 +140,33 @@ struct AccountHubView: View {
         } message: {
             Text("Your workouts stay on this iPhone.")
         }
-        .confirmationDialog(
-            "Delete account?",
-            isPresented: $showDeleteConfirm,
-            titleVisibility: .visible
-        ) {
-            Button("Delete Account", role: .destructive) {
-                Task { await deleteAccount() }
+        .sheet(isPresented: $showForgotPassword) {
+            NavigationStack {
+                ForgotPasswordView(initialEmail: email)
             }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("This will permanently delete your account and online backup. Workouts saved on this iPhone will stay here.")
+            .presentationDetents([.medium])
+        }
+        .sheet(isPresented: $showDeleteConfirm, onDismiss: {
+            deleteConfirmationText = ""
+        }) {
+            NavigationStack {
+                deleteAccountConfirmation
+            }
+            .presentationDetents([.medium])
         }
     }
 
     @ViewBuilder
     private var signedOutContent: some View {
         Section {
-            Text("Sign in or create an account.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .listRowBackground(Color.clear)
+            Picker("Mode", selection: $mode) {
+                ForEach(AuthMode.allCases) { option in
+                    Text(option.title).tag(option)
+                }
+            }
+            .pickerStyle(.segmented)
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
         }
 
         #if JIMM_ENABLE_APPLE_SIGN_IN
@@ -137,11 +184,48 @@ struct AccountHubView: View {
         #endif
 
         Section {
-            NavigationLink("Sign In") {
-                EmailAuthFormView(mode: .signIn)
+            if mode == .signUp {
+                TextField("First Name", text: $firstName)
+                    .textContentType(.givenName)
+                    .autocorrectionDisabled(true)
+                TextField("Last Name", text: $lastName)
+                    .textContentType(.familyName)
+                    .autocorrectionDisabled(true)
             }
-            NavigationLink("Create Account") {
-                EmailAuthFormView(mode: .signUp)
+            TextField("Email", text: $email)
+                .textContentType(.emailAddress)
+                .keyboardType(.emailAddress)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled(true)
+            SecureField("Password", text: $password)
+                .textContentType(mode == .signUp ? .newPassword : .password)
+            if mode == .signIn {
+                Button {
+                    showForgotPassword = true
+                } label: {
+                    Text("Forgot password?")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+        } footer: {
+            if mode == .signUp {
+                Text("Password must be at least 6 characters. Last name is optional.")
+            }
+        }
+
+        Section {
+            Button(mode.title) {
+                Task { await submitAuth() }
+            }
+            .disabled(isWorking || !canSubmit)
+        }
+
+        if let formMessage {
+            Section {
+                Text(formMessage)
+                    .foregroundStyle(isFormError ? .red : .secondary)
             }
         }
     }
@@ -149,6 +233,9 @@ struct AccountHubView: View {
     @ViewBuilder
     private var signedInContent: some View {
         Section {
+            if let firstName = auth.profileFirstName, !firstName.isEmpty {
+                LabeledContent("First Name", value: firstName)
+            }
             LabeledContent(
                 "Email",
                 value: auth.userEmail?.isEmpty == false ? (auth.userEmail ?? "") : auth.accountIdentifier
@@ -160,9 +247,56 @@ struct AccountHubView: View {
                 showSignOutConfirm = true
             }
             Button("Delete Account", role: .destructive) {
+                deleteConfirmationText = ""
                 showDeleteConfirm = true
             }
         }
+    }
+
+    private var deleteAccountConfirmation: some View {
+        Form {
+            Section {
+                Text("This will permanently delete your account and online backup. Workouts saved on this iPhone will stay here.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .listRowBackground(Color.clear)
+            }
+
+            Section {
+                TextField("Type DELETE", text: $deleteConfirmationText)
+                    .textInputAutocapitalization(.characters)
+                    .autocorrectionDisabled()
+                    .font(.body.monospaced())
+            } footer: {
+                Text("Type DELETE to confirm.")
+            }
+
+            Section {
+                Button("Delete Account", role: .destructive) {
+                    Task { await deleteAccount() }
+                }
+                .disabled(deleteConfirmationText != "DELETE" || isWorking)
+            }
+        }
+        .navigationTitle("Delete account?")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") {
+                    showDeleteConfirm = false
+                }
+            }
+        }
+        .disabled(isWorking)
+    }
+
+    private var canSubmit: Bool {
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedEmail.isEmpty, !password.isEmpty else { return false }
+        if mode == .signUp {
+            return !firstName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+        return true
     }
 
     #if JIMM_ENABLE_APPLE_SIGN_IN
@@ -170,26 +304,58 @@ struct AccountHubView: View {
         switch result {
         case .failure(let error):
             if (error as NSError).code == ASAuthorizationError.canceled.rawValue { return }
-            alertMessage = error.localizedDescription
+            formMessage = AuthService.userFacingAuthMessage(from: error)
+            isFormError = true
         case .success(let authorization):
             guard
                 let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
                 let tokenData = credential.identityToken,
                 let idToken = String(data: tokenData, encoding: .utf8)
             else {
-                alertMessage = AuthServiceError.invalidAppleCredential.localizedDescription
+                formMessage = AuthServiceError.invalidAppleCredential.localizedDescription
+                isFormError = true
                 return
             }
             isWorking = true
             defer { isWorking = false }
             do {
                 try await auth.signInWithApple(idToken: idToken, fullName: credential.fullName)
+                formMessage = nil
             } catch {
-                alertMessage = error.localizedDescription
+                formMessage = AuthService.userFacingAuthMessage(from: error)
+                isFormError = true
             }
         }
     }
     #endif
+
+    private func submitAuth() async {
+        isWorking = true
+        defer { isWorking = false }
+        isFormError = false
+        formMessage = nil
+        do {
+            switch mode {
+            case .signIn:
+                try await auth.signIn(email: email, password: password)
+            case .signUp:
+                try await auth.signUp(
+                    email: email,
+                    password: password,
+                    firstName: firstName,
+                    lastName: lastName
+                )
+                if !auth.isSignedIn {
+                    formMessage = "Check your email to confirm your account, then sign in."
+                    isFormError = false
+                    mode = .signIn
+                }
+            }
+        } catch {
+            isFormError = true
+            formMessage = AuthService.userFacingAuthMessage(from: error)
+        }
+    }
 
     private func signOut() async {
         isWorking = true
@@ -198,56 +364,39 @@ struct AccountHubView: View {
             try await auth.signOut()
             dismiss()
         } catch {
-            alertMessage = error.localizedDescription
+            alertMessage = AuthService.userFacingAuthMessage(from: error)
         }
     }
 
     private func deleteAccount() async {
+        guard deleteConfirmationText == "DELETE" else { return }
         isWorking = true
         defer { isWorking = false }
         do {
             try await auth.deleteAccount()
+            showDeleteConfirm = false
             dismiss()
         } catch {
-            alertMessage = error.localizedDescription
+            showDeleteConfirm = false
+            alertMessage = AuthService.userFacingAuthMessage(from: error)
         }
     }
 }
 
-// MARK: - Email forms
+// MARK: - Forgot password
 
-struct EmailAuthFormView: View {
-    enum Mode {
-        case signUp
-        case signIn
-        case reset
-
-        var title: String {
-            switch self {
-            case .signUp: return "Create Account"
-            case .signIn: return "Sign In"
-            case .reset: return "Reset password"
-            }
-        }
-
-        var submitTitle: String {
-            switch self {
-            case .signUp: return "Create Account"
-            case .signIn: return "Sign In"
-            case .reset: return "Send Reset Link"
-            }
-        }
-    }
-
-    let mode: Mode
+private struct ForgotPasswordView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var auth = AuthService.shared
 
-    @State private var email = ""
-    @State private var password = ""
+    @State private var email: String
     @State private var isWorking = false
     @State private var message: String?
     @State private var isError = false
+
+    init(initialEmail: String) {
+        _email = State(initialValue: initialEmail)
+    }
 
     var body: some View {
         Form {
@@ -256,36 +405,16 @@ struct EmailAuthFormView: View {
                     .textContentType(.emailAddress)
                     .keyboardType(.emailAddress)
                     .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                if mode == .signIn || mode == .signUp {
-                    SecureField("Password", text: $password)
-                        .textContentType(mode == .signUp ? .newPassword : .password)
-                }
-                if mode == .signIn {
-                    NavigationLink {
-                        EmailAuthFormView(mode: .reset)
-                    } label: {
-                        Text("Forgot password?")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
-                }
+                    .autocorrectionDisabled(true)
             } footer: {
-                switch mode {
-                case .signUp:
-                    Text("Use at least 6 characters.")
-                case .signIn:
-                    EmptyView()
-                case .reset:
-                    Text("Enter your email and we’ll send you a reset link.")
-                }
+                Text("Enter your email and we’ll send you a reset link.")
             }
 
             Section {
-                Button(mode.submitTitle) {
+                Button("Send Reset Link") {
                     Task { await submit() }
                 }
-                .disabled(isWorking || email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || ((mode == .signIn || mode == .signUp) && password.isEmpty))
+                .disabled(isWorking || email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
 
             if let message {
@@ -295,8 +424,13 @@ struct EmailAuthFormView: View {
                 }
             }
         }
-        .navigationTitle(mode.title)
+        .navigationTitle("Reset password")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") { dismiss() }
+            }
+        }
         .disabled(isWorking)
     }
 
@@ -304,25 +438,13 @@ struct EmailAuthFormView: View {
         isWorking = true
         defer { isWorking = false }
         isError = false
+        message = nil
         do {
-            switch mode {
-            case .signUp:
-                try await auth.signUp(email: email, password: password)
-                if auth.isSignedIn {
-                    dismiss()
-                } else {
-                    message = "Check your email to confirm your account, then sign in."
-                }
-            case .signIn:
-                try await auth.signIn(email: email, password: password)
-                dismiss()
-            case .reset:
-                try await auth.resetPassword(email: email)
-                message = "Check your email for a password reset link."
-            }
+            try await auth.resetPassword(email: email)
+            message = "Check your email for a password reset link."
         } catch {
             isError = true
-            message = error.localizedDescription
+            message = AuthService.userFacingAuthMessage(from: error)
         }
     }
 }

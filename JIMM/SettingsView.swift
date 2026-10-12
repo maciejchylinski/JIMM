@@ -29,10 +29,11 @@ struct SettingsView: View {
     @AppStorage("settings.appearance") private var appearanceRawValue: String = AppearanceOption.system.rawValue
 
     @ObservedObject private var authService = AuthService.shared
+    @State private var showAccountSheet = false
 
     var body: some View {
         List {
-            AccountSettingsSection(auth: authService)
+            AccountSettingsSection(auth: authService, showAccountSheet: $showAccountSheet)
 
             Section {
                 Picker("Units", selection: $unitsRawValue) {
@@ -57,6 +58,11 @@ struct SettingsView: View {
         .scrollContentBackground(.hidden)
         .background(UITheme.appBackground.ignoresSafeArea())
         .navigationTitle("Settings")
+        .sheet(isPresented: $showAccountSheet) {
+            NavigationStack {
+                AccountHubView()
+            }
+        }
         .safeAreaInset(edge: .bottom) {
             Text("Version \(appVersionText)")
                 .font(.caption2)
