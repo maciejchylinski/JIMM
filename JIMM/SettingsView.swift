@@ -29,11 +29,10 @@ struct SettingsView: View {
     @AppStorage("settings.appearance") private var appearanceRawValue: String = AppearanceOption.system.rawValue
 
     @ObservedObject private var authService = AuthService.shared
-    @ObservedObject private var syncService = SyncService.shared
 
     var body: some View {
         List {
-            AccountSettingsSection(auth: authService, sync: syncService)
+            AccountSettingsSection(auth: authService)
 
             Section {
                 Picker("Units", selection: $unitsRawValue) {

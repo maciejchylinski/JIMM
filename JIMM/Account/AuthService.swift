@@ -13,11 +13,11 @@ enum AuthServiceError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .notConfigured:
-            return "Cloud account is not available right now."
+            return "Account is not available right now."
         case .notSignedIn:
             return "You are not signed in."
         case .invalidAppleCredential:
-            return "Apple Sign In did not return a valid identity token."
+            return "Couldn’t sign in with Apple. Please try again."
         case .message(let text):
             return text
         }
@@ -34,20 +34,16 @@ enum SyncStatus: Equatable {
 
     var label: String {
         switch self {
-        case .idle:
-            return "Not synced"
+        case .idle, .synced:
+            return "Synced"
         case .syncing:
             return "Syncing…"
-        case .synced(let date):
-            let formatter = RelativeDateTimeFormatter()
-            formatter.unitsStyle = .short
-            return "Synced \(formatter.localizedString(for: date, relativeTo: Date()))"
         case .pendingBackup:
-            return "Local data ready to back up"
+            return "Ready to sync"
         case .offline:
-            return "Offline — will sync later"
-        case .error(let message):
-            return message
+            return "Offline"
+        case .error:
+            return "Sync failed. Try again."
         }
     }
 }

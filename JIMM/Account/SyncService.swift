@@ -74,19 +74,19 @@ final class SyncService: ObservableObject {
     func syncNow(isManual: Bool = true) async {
         guard !isSyncing else { return }
         guard let context = modelContext else {
-            lastSyncError = "Local store not ready."
+            lastSyncError = "Couldn’t sync right now. Try again."
             return
         }
         guard AuthService.shared.isSignedIn else { return }
         guard let client = SupabaseService.shared.client, let userID = AuthService.shared.userID else {
-            AuthService.shared.setSyncStatus(.error("Cloud not configured."))
+            AuthService.shared.setSyncStatus(.error("Account is not available right now."))
             return
         }
 
         if !isPathSatisfied {
             AuthService.shared.setSyncStatus(.offline)
             if isManual {
-                lastSyncError = "No network connection. Changes stay on this device and will sync later."
+                lastSyncError = "You’re offline. Try again when you’re connected."
             }
             return
         }

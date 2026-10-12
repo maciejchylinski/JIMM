@@ -1,20 +1,18 @@
 #if JIMM_ENABLE_APPLE_SIGN_IN
 import AuthenticationServices
 #endif
-import SwiftData
 import SwiftUI
 
 // MARK: - Settings section
 
 struct AccountSettingsSection: View {
     @ObservedObject var auth: AuthService
-    @ObservedObject var sync: SyncService
     @State private var showAccountSheet = false
 
     var body: some View {
         Section("Account") {
             if !SupabaseConfig.isConfigured {
-                Text("Cloud backup is not available yet.")
+                Text("Account is not available yet.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             } else if auth.isSignedIn {
@@ -22,13 +20,8 @@ struct AccountSettingsSection: View {
                     showAccountSheet = true
                 } label: {
                     HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(auth.accountIdentifier)
-                                .foregroundStyle(.primary)
-                            Text(auth.syncStatus.label)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
+                        Text(auth.accountIdentifier)
+                            .foregroundStyle(.primary)
                         Spacer()
                         Image(systemName: "chevron.right")
                             .font(.caption.weight(.semibold))
@@ -36,10 +29,10 @@ struct AccountSettingsSection: View {
                     }
                 }
             } else {
-                Button("Sign In / Create Account") {
+                Button("Account") {
                     showAccountSheet = true
                 }
-                Text("Optional. Workouts stay on this device. Sign in to back up and sync.")
+                Text("Sign in to use your account.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
@@ -57,13 +50,11 @@ struct AccountSettingsSection: View {
 struct AccountHubView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var auth = AuthService.shared
-    @ObservedObject private var sync = SyncService.shared
 
     @State private var isWorking = false
     @State private var alertMessage: String?
     @State private var showSignOutConfirm = false
     @State private var showDeleteConfirm = false
-    @Environment(\.modelContext) private var modelContext
 
     var body: some View {
         List {
@@ -105,7 +96,7 @@ struct AccountHubView: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Your workouts stay on this device. Cloud backup pauses until you sign in again.")
+            Text("Your workouts stay on this iPhone.")
         }
         .confirmationDialog(
             "Delete account?",
@@ -119,20 +110,18 @@ struct AccountHubView: View {
         } message: {
             Text("This will permanently delete your account and online backup. Workouts saved on this iPhone will stay here.")
         }
-        .alert("Back up local workouts?", isPresented: $auth.shouldOfferInitialBackup) {
-            Button("Back Up Now") {
-                Task { await runSync(manual: true) }
-            }
-            Button("Not Now", role: .cancel) {
-                auth.markInitialBackupCompleted()
-            }
-        } message: {
-            Text("You have workouts or plans on this device. Back them up to your account? You can sync later from Settings.")
-        }
     }
 
     @ViewBuilder
     private var signedOutContent: some View {
+        Section {
+            Text("Sign in or create an account.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .listRowBackground(Color.clear)
+        }
+
         #if JIMM_ENABLE_APPLE_SIGN_IN
         Section {
             SignInWithAppleButton(.signIn) { request in
@@ -144,54 +133,26 @@ struct AccountHubView: View {
             .frame(maxWidth: .infinity)
             .frame(height: 44)
             .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-        } footer: {
-            Text("Continue with Apple uses your Apple ID. Email is optional depending on your Apple privacy choices.")
         }
         #endif
 
-        Section("Email") {
-            NavigationLink("Create Account") {
-                EmailAuthFormView(mode: .signUp)
-            }
+        Section {
             NavigationLink("Sign In") {
                 EmailAuthFormView(mode: .signIn)
             }
-            NavigationLink("Forgot Password") {
-                EmailAuthFormView(mode: .reset)
+            NavigationLink("Create Account") {
+                EmailAuthFormView(mode: .signUp)
             }
-        }
-
-        Section {
-            Text("JIMM works fully offline without an account. Signing in only enables optional cloud backup and sync.")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
         }
     }
 
     @ViewBuilder
     private var signedInContent: some View {
-        Section("Signed In") {
-            LabeledContent("Account", value: auth.accountIdentifier)
-            LabeledContent("Sync", value: auth.syncStatus.label)
-            if let error = sync.lastSyncError {
-                Text(error)
-                    .font(.caption)
-                    .foregroundStyle(.red)
-            }
-        }
-
         Section {
-            Button {
-                Task { await runSync(manual: true) }
-            } label: {
-                Label(
-                    auth.hasCompletedInitialBackup ? "Sync Now" : "Back Up Data",
-                    systemImage: "arrow.triangle.2.circlepath"
-                )
-            }
-            .disabled(sync.isSyncing)
-        } footer: {
-            Text("New workouts sync when you are signed in and online. Logging never waits on the network.")
+            LabeledContent(
+                "Email",
+                value: auth.userEmail?.isEmpty == false ? (auth.userEmail ?? "") : auth.accountIdentifier
+            )
         }
 
         Section {
@@ -230,16 +191,6 @@ struct AccountHubView: View {
     }
     #endif
 
-    private func runSync(manual: Bool) async {
-        isWorking = true
-        defer { isWorking = false }
-        SyncService.shared.attach(modelContext: modelContext)
-        await sync.syncNow(isManual: manual)
-        if let error = sync.lastSyncError, manual {
-            alertMessage = error
-        }
-    }
-
     private func signOut() async {
         isWorking = true
         defer { isWorking = false }
@@ -275,7 +226,15 @@ struct EmailAuthFormView: View {
             switch self {
             case .signUp: return "Create Account"
             case .signIn: return "Sign In"
-            case .reset: return "Reset Password"
+            case .reset: return "Reset password"
+            }
+        }
+
+        var submitTitle: String {
+            switch self {
+            case .signUp: return "Create Account"
+            case .signIn: return "Sign In"
+            case .reset: return "Send Reset Link"
             }
         }
     }
@@ -298,26 +257,35 @@ struct EmailAuthFormView: View {
                     .keyboardType(.emailAddress)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
-                if mode != .reset {
+                if mode == .signIn || mode == .signUp {
                     SecureField("Password", text: $password)
                         .textContentType(mode == .signUp ? .newPassword : .password)
+                }
+                if mode == .signIn {
+                    NavigationLink {
+                        EmailAuthFormView(mode: .reset)
+                    } label: {
+                        Text("Forgot password?")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             } footer: {
                 switch mode {
                 case .signUp:
-                    Text("Use at least 6 characters. You may need to confirm your email before signing in.")
+                    Text("Use at least 6 characters.")
                 case .signIn:
-                    Text("Sign in with the email and password for your JIMM account.")
+                    EmptyView()
                 case .reset:
-                    Text("We will email a password reset link if an account exists for this address.")
+                    Text("Enter your email and we’ll send you a reset link.")
                 }
             }
 
             Section {
-                Button(mode.title) {
+                Button(mode.submitTitle) {
                     Task { await submit() }
                 }
-                .disabled(isWorking || email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || (mode != .reset && password.isEmpty))
+                .disabled(isWorking || email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || ((mode == .signIn || mode == .signUp) && password.isEmpty))
             }
 
             if let message {
@@ -343,14 +311,14 @@ struct EmailAuthFormView: View {
                 if auth.isSignedIn {
                     dismiss()
                 } else {
-                    message = "Account created. Check your email to confirm, then sign in."
+                    message = "Check your email to confirm your account, then sign in."
                 }
             case .signIn:
                 try await auth.signIn(email: email, password: password)
                 dismiss()
             case .reset:
                 try await auth.resetPassword(email: email)
-                message = "If an account exists for that email, a reset link has been sent."
+                message = "Check your email for a password reset link."
             }
         } catch {
             isError = true
