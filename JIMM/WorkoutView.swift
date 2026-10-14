@@ -8,10 +8,6 @@ struct WorkoutView: View {
     @Query(sort: \WorkoutSession.sessionDate, order: .reverse)
     private var allSessionsBySessionDate: [WorkoutSession]
 
-    private var unfinishedSessions: [WorkoutSession] {
-        allSessionsBySessionDate.filter { $0.completedAt == nil }
-    }
-
     @State private var newSession: WorkoutSession?
     @State private var sessionWorkoutTitle = "Workout"
     @State private var showSession = false
@@ -131,9 +127,11 @@ struct WorkoutView: View {
         }
     }
 
-    /// Newest unfinished session by `sessionDate` (matches `@Query` sort: reverse sessionDate).
+    /// Explicitly marked current workout only (not “any unfinished session”).
     private var activeUnfinishedSession: WorkoutSession? {
-        unfinishedSessions.first
+        // Observe session changes so finish/discard updates Resume / New Workout immediately.
+        _ = allSessionsBySessionDate.count
+        return ActiveWorkoutSession.resolveCurrentActiveSession(in: modelContext)
     }
 
     private func orderedSessionExercises(_ session: WorkoutSession) -> [WorkoutSessionExercise] {
@@ -151,6 +149,7 @@ struct WorkoutView: View {
             try modelContext.save()
         } catch {
         }
+        ActiveWorkoutSession.markActive(session)
         sessionWorkoutTitle = "Workout"
         newSession = session
         workoutSessionPresentationState.registerWorkoutSessionView(for: session.persistentModelID)
@@ -158,6 +157,7 @@ struct WorkoutView: View {
     }
 
     private func resumeSession(_ session: WorkoutSession) {
+        ActiveWorkoutSession.markActive(session)
         sessionWorkoutTitle = workoutTitle(for: session)
         newSession = session
         workoutSessionPresentationState.registerWorkoutSessionView(for: session.persistentModelID)
@@ -449,6 +449,7 @@ private struct RepeatWorkoutPreviewView: View {
             return
         }
         guard let repeated = WorkoutSession.newRepeating(from: sourceSession, in: modelContext) else { return }
+        ActiveWorkoutSession.markActive(repeated)
         newRepeatedSession = repeated
         workoutSessionPresentationState.registerWorkoutSessionView(for: repeated.persistentModelID)
         showRepeatedSession = true

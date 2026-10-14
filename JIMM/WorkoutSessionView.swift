@@ -370,15 +370,10 @@ struct WorkoutSessionView: View {
         )
     }
 
-    /// Newest unfinished session that should drive live timer updates.
-    private var activeUnfinishedSessionID: PersistentIdentifier? {
-        allSessions.first(where: { $0.completedAt == nil })?.persistentModelID
-    }
-
-    /// Live timer only for the current active unfinished workout.
+    /// Live timer only for the explicitly marked current unfinished workout.
     private var isLiveWorkoutTimer: Bool {
         guard session.completedAt == nil else { return false }
-        return session.persistentModelID == activeUnfinishedSessionID
+        return ActiveWorkoutSession.isMarkedActive(session)
     }
 
     private var isSetEntryKeypadVisible: Bool {
@@ -996,6 +991,7 @@ struct WorkoutSessionView: View {
     private func finishWorkout() {
         guard hasMeaningfulLoggedContent else {
             clearRestTimerAndLiveActivity()
+            ActiveWorkoutSession.clearActive(matching: session)
             unregisterThisWorkoutSessionFromPresentation()
             modelContext.delete(session)
             try? modelContext.save()
@@ -1011,6 +1007,7 @@ struct WorkoutSessionView: View {
             }
         }
         clearRestTimerAndLiveActivity()
+        ActiveWorkoutSession.clearActive(matching: session)
         modelContext.processPendingChanges()
         try? modelContext.save()
         NotificationCenter.default.post(name: .jimLocalDataDidChange, object: nil)
@@ -1231,6 +1228,7 @@ struct WorkoutSessionView: View {
 
     private func discardWorkout() {
         clearRestTimerAndLiveActivity()
+        ActiveWorkoutSession.clearActive(matching: session)
         unregisterThisWorkoutSessionFromPresentation()
         modelContext.delete(session)
         try? modelContext.save()
@@ -1326,6 +1324,7 @@ struct WorkoutSessionView: View {
         }
 
         guard let repeated = WorkoutSession.newRepeating(from: session, in: modelContext) else { return }
+        ActiveWorkoutSession.markActive(repeated)
         repeatTargetSession = repeated
         repeatTargetTitle = titleForSession(repeated, fallback: displayWorkoutTitle)
         workoutSessionPresentationState.registerWorkoutSessionView(for: repeated.persistentModelID)

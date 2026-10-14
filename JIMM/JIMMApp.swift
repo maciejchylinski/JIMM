@@ -56,6 +56,7 @@ struct JIMMApp: App {
             .task {
                 SyncService.shared.attach(modelContext: container.mainContext)
                 AuthService.shared.bootstrap()
+                reconcileActiveWorkoutOnLaunch()
                 await dismissLaunchLoadingIfNeeded()
                 reconcileRestTimerLiveActivity()
                 SyncService.shared.scheduleSync()
@@ -73,7 +74,7 @@ struct JIMMApp: App {
                 }
                 guard url.scheme == "mch.jim", url.host == "active-workout" else { return }
                 Task { @MainActor in
-                    if let session = try? ActiveWorkoutSession.canonicalUnfinishedSessionAfterCleanup(in: container.mainContext) {
+                    if let session = ActiveWorkoutSession.resolveCurrentActiveSession(in: container.mainContext) {
                         NotificationCenter.default.post(name: .jimOpenActiveWorkoutSession, object: session)
                     }
                 }
@@ -102,6 +103,17 @@ struct JIMMApp: App {
     private func dismissLaunchLoadingIfNeeded() async {
         try? await Task.sleep(for: .milliseconds(300))
         isLaunchLoadingVisible = false
+    }
+
+    /// Clears stale / invalid active-workout marker and any orphaned rest Live Activity.
+    @MainActor
+    private func reconcileActiveWorkoutOnLaunch() {
+        try? ActiveWorkoutSession.pruneDuplicateUnfinishedSessions(in: container.mainContext)
+        let active = ActiveWorkoutSession.resolveCurrentActiveSession(in: container.mainContext)
+        if active == nil {
+            workoutSessionPresentationState.clearRestTimer()
+            restTimerLiveActivityManager.sync(payload: nil)
+        }
     }
 
     private var mainAppContent: some View {
@@ -142,14 +154,13 @@ struct JIMMApp: App {
 
     @MainActor
     private func activeUnfinishedSession(matching sessionID: PersistentIdentifier) -> WorkoutSession? {
-        var descriptor = FetchDescriptor<WorkoutSession>(
-            sortBy: [SortDescriptor(\WorkoutSession.sessionDate, order: .reverse)]
-        )
-        descriptor.fetchLimit = 20
-        let sessions = (try? container.mainContext.fetch(descriptor)) ?? []
-        return sessions.first {
-            $0.persistentModelID == sessionID && $0.completedAt == nil
+        guard let active = ActiveWorkoutSession.resolveCurrentActiveSession(in: container.mainContext) else {
+            return nil
         }
+        guard active.persistentModelID == sessionID, active.completedAt == nil else {
+            return nil
+        }
+        return active
     }
 
     private func liveActivityExerciseName(fallbackSession session: WorkoutSession) -> String {

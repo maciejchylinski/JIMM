@@ -291,6 +291,7 @@ struct WorkoutPlanEditorView: View {
             return
         }
         guard let session = WorkoutSession.newFromPlan(plan, in: modelContext) else { return }
+        ActiveWorkoutSession.markActive(session)
         workoutSessionPresentationState.registerWorkoutSessionView(for: session.persistentModelID)
         startedSession = session
         startedSessionTitle = editorTitle
@@ -411,6 +412,7 @@ enum WorkoutPlanFlow {
             return
         }
         guard let session = WorkoutSession.newFromPlan(plan, in: modelContext) else { return }
+        ActiveWorkoutSession.markActive(session)
         NotificationCenter.default.post(name: .jimOpenActiveWorkoutSession, object: session)
     }
 }

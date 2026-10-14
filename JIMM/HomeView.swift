@@ -168,6 +168,7 @@ struct HomeView: View {
             return
         }
         guard let session = WorkoutSession.newRepeating(from: source, in: modelContext) else { return }
+        ActiveWorkoutSession.markActive(session)
         repeatSessionTitle = displayTitle
         repeatSession = session
         workoutSessionPresentationState.registerWorkoutSessionView(for: session.persistentModelID)

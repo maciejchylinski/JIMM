@@ -23,7 +23,9 @@ struct ContentView: View {
     @State private var pendingResumeSession: WorkoutSession?
 
     private var activeUnfinishedSession: WorkoutSession? {
-        allSessionsBySessionDate.first(where: { $0.completedAt == nil })
+        // Observe session changes so finish/discard clears the mini bar immediately.
+        _ = allSessionsBySessionDate.count
+        return ActiveWorkoutSession.resolveCurrentActiveSession(in: modelContext)
     }
 
     private var activeWorkoutMiniBarScrollInset: CGFloat {
@@ -94,6 +96,7 @@ struct ContentView: View {
     }
 
     private func openActiveWorkout(_ session: WorkoutSession) {
+        ActiveWorkoutSession.markActive(session)
         selectedTab = .workout
         // Reset first so repeated taps always retrigger resume in WorkoutView.
         pendingResumeSession = nil

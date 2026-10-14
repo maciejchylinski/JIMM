@@ -1,10 +1,76 @@
 import Foundation
 import SwiftData
 
-/// Helpers for the single active (unfinished) workout: newest `WorkoutSession` with `completedAt == nil`
-/// by `sessionDate`.
+/// Explicit current-workout marker. Do not treat “any unfinished session” as active.
 enum ActiveWorkoutSession {
-    /// Unfinished sessions sorted with newest `sessionDate` first. The active session is `first`.
+    /// Workouts older than this are no longer eligible to resume as the active session.
+    static let staleInterval: TimeInterval = 12 * 60 * 60
+
+    private static let activeSyncIDKey = "activeWorkout.currentSyncID"
+
+    private static var storedActiveSyncID: UUID? {
+        get {
+            guard let raw = UserDefaults.standard.string(forKey: activeSyncIDKey) else { return nil }
+            return UUID(uuidString: raw)
+        }
+        set {
+            if let newValue {
+                UserDefaults.standard.set(newValue.uuidString, forKey: activeSyncIDKey)
+            } else {
+                UserDefaults.standard.removeObject(forKey: activeSyncIDKey)
+            }
+        }
+    }
+
+    static func markActive(_ session: WorkoutSession) {
+        storedActiveSyncID = session.syncID
+    }
+
+    static func clearActive(matching session: WorkoutSession? = nil) {
+        if let session {
+            guard storedActiveSyncID == session.syncID else { return }
+        }
+        storedActiveSyncID = nil
+    }
+
+    static func isMarkedActive(_ session: WorkoutSession) -> Bool {
+        storedActiveSyncID == session.syncID
+    }
+
+    static func isStale(_ session: WorkoutSession, now: Date = .now) -> Bool {
+        now.timeIntervalSince(session.sessionDate) > staleInterval
+    }
+
+    /// Returns the explicitly marked active workout if it is still valid.
+    /// Clears the marker when the session is missing, completed, or stale.
+    /// Does not delete workout records.
+    @discardableResult
+    static func resolveCurrentActiveSession(in context: ModelContext, now: Date = .now) -> WorkoutSession? {
+        guard let syncID = storedActiveSyncID else { return nil }
+
+        let predicate = #Predicate<WorkoutSession> { $0.syncID == syncID }
+        var descriptor = FetchDescriptor<WorkoutSession>(predicate: predicate)
+        descriptor.fetchLimit = 1
+
+        guard let session = try? context.fetch(descriptor).first else {
+            storedActiveSyncID = nil
+            return nil
+        }
+
+        if session.completedAt != nil {
+            storedActiveSyncID = nil
+            return nil
+        }
+
+        if isStale(session, now: now) {
+            storedActiveSyncID = nil
+            return nil
+        }
+
+        return session
+    }
+
+    /// Unfinished sessions sorted with newest `sessionDate` first.
     static func unfinishedSessionsSorted(in context: ModelContext) throws -> [WorkoutSession] {
         let predicate = #Predicate<WorkoutSession> { $0.completedAt == nil }
         var descriptor = FetchDescriptor<WorkoutSession>(predicate: predicate)
@@ -12,26 +78,17 @@ enum ActiveWorkoutSession {
         return try context.fetch(descriptor)
     }
 
-    /// If more than one unfinished session exists, keeps the newest by `sessionDate` and deletes the rest.
+    /// Reconciles the active marker. Does not delete unfinished session records.
     static func pruneDuplicateUnfinishedSessions(in context: ModelContext) throws {
-        let sessions = try unfinishedSessionsSorted(in: context)
-        guard sessions.count > 1 else { return }
-        for session in sessions.dropFirst() {
-            context.delete(session)
-        }
-        try context.save()
+        _ = resolveCurrentActiveSession(in: context)
     }
 
-    /// Newest unfinished session if any (does not prune). Prefer `canonicalUnfinishedSessionAfterCleanup` before starting a new workout.
+    /// Current active workout after reconciling the explicit marker (stale / missing / completed cleared).
+    static func canonicalUnfinishedSessionAfterCleanup(in context: ModelContext) throws -> WorkoutSession? {
+        resolveCurrentActiveSession(in: context)
+    }
+
     static func newestUnfinishedSession(in context: ModelContext) throws -> WorkoutSession? {
         try unfinishedSessionsSorted(in: context).first
     }
-
-    /// Prunes duplicate unfinished sessions, then returns the single remaining in-progress workout, if any.
-    /// Call this **before** inserting a new active `WorkoutSession` so the UI can resume the existing one instead.
-    static func canonicalUnfinishedSessionAfterCleanup(in context: ModelContext) throws -> WorkoutSession? {
-        try pruneDuplicateUnfinishedSessions(in: context)
-        return try newestUnfinishedSession(in: context)
-    }
-
 }
